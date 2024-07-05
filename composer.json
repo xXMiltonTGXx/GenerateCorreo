@@ -1,0 +1,16 @@
+{
+    "name": "milton/generatecorreo",
+    "description": "Generador de Correo mediante Datos del usuario",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Milton Toalombo",
+            "email": "milton.toalombog@ug.edu.ec"
+        }
+    ],
+    "require": {}
+}
