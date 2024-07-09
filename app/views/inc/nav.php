@@ -1,9 +1,7 @@
-<?php 
-    require './app/views/inc/validarUsuario.php';    
-    $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'Invitado';
-    $userEmail = isset($_SESSION['user_email']) ? $_SESSION['user_email'] : 'Sin correo';
-
-
+<?php
+  require './app/views/inc/validarUsuario.php';
+  $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'Invitado';
+  $userEmail = isset($_SESSION['user_email']) ? $_SESSION['user_email'] : 'Sin correo';
 ?>
 
 
@@ -24,21 +22,89 @@
           </div>
         </div>
         <div class="hidden md:block">
+          
           <div class="ml-4 flex items-center md:ml-6">
-            
-            <button type="button" class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white hover:outline-none hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-gray-800">
-              <span class="absolute -inset-1.5"></span>
-              <div class="text-white font-bold ">
-                Hola, <?= htmlspecialchars($userName); ?>
-              </div>
 
+          <div class="text-white font-bold  ">
+                Hola, <?= htmlspecialchars($userName); ?>
+          </div>
+   <!-- Botón para mostrar/ocultar el sidebar -->
+   <button id="toggleSidebar" type="button" class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 ml-4">
+              <span class="sr-only">Ver notificaciones</span>
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
             </button>
 
+            <!-- Sidebar -->
+            <div id="sidebar" class="fixed inset-0 top-16 z-50 overflow-hidden hidden">
+                <div class="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                <div class="absolute inset-y-0 right-0 pl-10 max-w-full flex">
+                    <div class="relative w-screen max-w-2xl">
+                        <div class="h-full flex flex-col py-8 bg-white shadow-xl">
+                            <div class="px-6 sm:px-8">
+                                <div class="flex items-start justify-between">
+                                    <h2 class="text-xl font-medium text-gray-900" id="slide-over-title">
+                                        Últimos Accesos
+                                    </h2>
+                                    <div class="  h-7 flex items-center">
+                                        <button id="closeSidebar" class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            <span class="sr-only">Cerrar panel</span>
+                                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </div>  
+                                </div>
+                            </div> 
+                              <div class="flex gap-4" id="accessListContainer">
+                                        <!-- Los datos de acceso se cargarán aquí -->
+                               </div> 
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.getElementById('toggleSidebar').addEventListener('click', function() {
+                    document.getElementById('sidebar').classList.toggle('hidden');
+                    loadAccessLogs();
+                });
+
+                document.getElementById('closeSidebar').addEventListener('click', function() {
+                    document.getElementById('sidebar').classList.add('hidden');
+                });
+
+                function loadAccessLogs() {
+                    fetch('/generatecorreo/ultimos-accesos')
+                        .then(response => response.json())
+                        .then(data => {
+                            const accessListContainer = document.getElementById('accessListContainer');
+                            accessListContainer.innerHTML = '';
+
+                            data.forEach(access => {
+                                const listItem = document.createElement('div');
+                                listItem.classList.add('border', 'border-gray-300', 'p-4', 'rounded-lg');
+                                const inicioSesion = new Date(access.inicio_sesion).toLocaleString();
+                                const cierreSesion = access.cierre_sesion ? new Date(access.cierre_sesion).toLocaleString() : 'Sesión aún activa';
+                                listItem.innerHTML = `<p>Inicio: ${inicioSesion}</p><p>Cierre: ${cierreSesion}</p>`;
+                                accessListContainer.appendChild(listItem);
+                            });
+                        });
+                }
+            </script>
+
+
+ 
+ 
+ 
             <!-- Profile dropdown -->
             <div class="relative ml-3">
+              
                 <div>
                     <button type="button" class="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800" id="user-menu-button" aria-haspopup="true" onclick="toggleMenu()">
-                        <span class="sr-only">Open user menu</span> 
+                        <span class="sr-only">Abrir menu usuario</span> 
                         <img class="h-8 w-8 rounded-full" src="app/views/img/default.png" alt="default-photo">
                     </button>
                 </div>
@@ -46,8 +112,9 @@
                 <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" id="user-menu" tabindex="-1">
                     <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1">correo: <?= htmlspecialchars($userEmail); ?></a>
                     <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1">Settings</a>
-                    <a href="/generatecorreo/logout" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1">Cerrar Sesión</a>
+                    <a href="/generatecorreo/logout" id="logout-link" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1">Cerrar Sesión</a>
                 </div>
+
             </div> 
           </div>
         </div>
@@ -68,7 +135,7 @@
         </div>
       </div>
     </div>
-    <script src="/myapp/app/views/js/index.js"></script>
+    <script src="/generatecorreo/app/views/js/index.js"></script>
 
 
 
@@ -77,9 +144,9 @@
     <div class="md:hidden" id="mobile-menu">
       <div class="space-y-1 px-2 pb-3 pt-2 sm:px-3">
         <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-        <a href="/miapp/mostrarProduct" class="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white" aria-current="page">Mostrar Producto</a>
-        <a href="/miapp/registerProduct" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Crear Producto</a>
-        <a href="/miapp/buscarProduct" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Buscar Producto</a> 
+        <a href="/generatecorreo/mostrarProduct" class="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white" aria-current="page">Mostrar Producto</a>
+        <a href="/generatecorreo/registerProduct" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Crear Producto</a>
+        <a href="/generatecorreo/buscarProduct" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Buscar Producto</a> 
       </div>
       <div class="border-t border-gray-700 pb-3 pt-4">
         <div class="flex items-center px-5">
@@ -106,13 +173,9 @@
       </div>
     </div>
   </nav>
-
-    <script>
-        function toggleMenu() {
-            const menu = document.getElementById('user-menu');
-            menu.classList.toggle('hidden');
-        }
-    </script>
+  
+  <script src="<?php echo APP_URL; ?>app/views/js/nav.js"></script>
+    
 
   <main>
       

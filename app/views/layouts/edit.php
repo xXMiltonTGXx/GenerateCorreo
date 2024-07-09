@@ -25,7 +25,7 @@ require_once __DIR__ . '/../inc/nav.php';
         <input id="identificacion" name="identificacion" type="text" value="<?= htmlspecialchars($user['identificacion']) ?>"  required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50">
         </div>
 
-
+    
 
 
         <div>

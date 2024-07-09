@@ -19,6 +19,15 @@ class User {
         return $stmt->fetchColumn() > 0;
     }
 
+    public function checkEmailExists($email) {
+        $query = "SELECT COUNT(*) FROM " . $this->table_name . " WHERE correo_generado = :email";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetchColumn() > 0;
+    }
+    
+
     public function register($identificacion, $nombres, $apellidos, $correo_generado, $password, $rol) {
         $query = "INSERT INTO usuarios (identificacion, nombres, apellidos, correo_generado, password, rol) VALUES (:identificacion, :nombres, :apellidos, :correo_generado, :password, :rol)";
         $stmt = $this->conn->prepare($query);
@@ -36,20 +45,23 @@ class User {
     }
 
     
-    public function login($email, $password) {
-        $query = "SELECT idUsuario, nombres, correo_generado, password FROM " . $this->table_name . " WHERE correo_generado = :correo_generado LIMIT 1";
+    public function login($emailOrUsername, $password) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE correo_generado = :emailOrUsername OR correo_generado LIKE :usernamePattern";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':correo_generado', $email);
+        $stmt->bindParam(':emailOrUsername', $emailOrUsername);
+        $usernamePattern = $emailOrUsername . '@%';
+        $stmt->bindParam(':usernamePattern', $usernamePattern);
         $stmt->execute();
-    
-        if ($stmt->rowCount() == 1) {
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (password_verify($password, $row['password'])) {
-                return $row; // Retorna todos los detalles del usuario
-            }
+
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($user && password_verify($password, $user['password'])) {
+            return $user;
         }
+
         return false;
     }
+
+ 
     
 
     public function getAllUsers() {
@@ -83,7 +95,7 @@ class User {
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':correo_generado', $email);
         $stmt->execute();
-    
+
         if ($stmt->rowCount() == 1) {
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             return $row['idUsuario'];

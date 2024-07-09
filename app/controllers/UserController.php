@@ -2,16 +2,19 @@
 namespace App\Controllers;
 
 use App\Models\User;
+use App\Models\Sesion; 
 use App\Config\Database;
 
 
 class UserController {
     private $userModel;
+    private $sesionModel;
 
     public function __construct() {
         $database = new Database();
         $db = $database->getConnection();
         $this->userModel = new User($db);
+        $this->sesionModel = new Sesion($db);
     }
 
     public function register() {
@@ -19,31 +22,20 @@ class UserController {
             $cedula = $_POST['identificacion'];
             $nombre = $_POST['nombres'];
             $apellido = $_POST['apellidos']; 
+            $correo_generado = $_POST['correo_generado']; 
             $password = $_POST['password']; 
             $rol = $_POST['rol']; 
-
-             // Verificar si la cédula ya existe
-             if ($this->userModel->checkCedulaExists($cedula)) {
-                echo "<div class='alert alert-danger'>La cédula ya está registrada. Por favor, usa una cédula diferente.</div>";
-                require __DIR__ . '/../views/layouts/register.php';
-                exit;
-            }
-            
-            // Generar correo
-            $nombres = explode(' ', $nombre);
-            $apellidos = explode(' ', $apellido);
-            
-            $primer_nombre = strtolower(substr($nombres[0], 0, 1)); // Primer letra del primer nombre en minúscula
-            $primer_apellido = strtolower($apellidos[0]); // Primer apellido en minúscula
-            $segundo_apellido_inicial = (count($apellidos) > 1) ? strtolower(substr($apellidos[1], 0, 1)) : ''; // Primer caracter del segundo apellido en minúscula si existe
-    
-            $correo_generado = $primer_nombre . $primer_apellido . $segundo_apellido_inicial . '@mail.com';
-    
+  
+         
             if ($this->userModel->register($cedula, $nombre, $apellido, $correo_generado, $password, $rol)) {
                 // Iniciar sesión después de registrar
                 session_start();
+                $_SESSION['logged_in'] = true;
                 $_SESSION['user_id'] = $this->userModel->getUserIdByEmail($correo_generado);
+                $_SESSION['user_name'] = $nombre;
                 $_SESSION['user_email'] = $correo_generado;
+                // Registrar la sesión
+                $this->sesionModel->registrarInicioSesion($_SESSION['user_id']);
     
                 header("Location: /generatecorreo/dashboard");
                 exit;
@@ -51,6 +43,32 @@ class UserController {
                 echo "<div class='alert alert-danger'>No se pudo registrar al usuario.</div>";
             }
         }
+    }
+
+    public function checkCedula() {
+        header('Content-Type: application/json');
+        if (isset($_GET['cedula'])) {
+            $cedula = $_GET['cedula'];
+            $exists = $this->userModel->checkCedulaExists($cedula);
+            echo json_encode(['exists' => $exists]);
+        } else {
+            echo json_encode(['exists' => false]);
+        }
+        exit(); // Asegúrate de terminar el script para que no se envíe contenido adicional
+    }
+    
+
+    
+    public function checkEmail() {
+        header('Content-Type: application/json');
+        if (isset($_GET['email'])) {
+            $email = $_GET['email'];
+            $exists = $this->userModel->checkEmailExists($email);
+            echo json_encode(['exists' => $exists]);
+        } else {
+            echo json_encode(['exists' => false]);
+        }
+        exit(); // Asegúrate de terminar el script para que no se envíe contenido adicional
     }
  
 
@@ -75,6 +93,12 @@ class UserController {
         // Debugging: print the ID
         echo "ID recibido: " . htmlspecialchars($userId);
     
+        // Eliminar las sesiones del usuario
+        if (!$this->sesionModel->eliminarSesiones($userId)) {
+            die("No se pudieron eliminar las sesiones del usuario.");
+        }
+
+        // Eliminar el usuario
         if ($this->userModel->delete($userId)) {
             header("Location: /generatecorreo/mostrarP");
             exit;

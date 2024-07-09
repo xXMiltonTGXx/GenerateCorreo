@@ -39,11 +39,12 @@ require_once __DIR__ . '/../inc/nav.php';
 
                         <td class="px-6 py-4"><a class="text-blue-600 hover:underline" href="edit-user?idUsuario=<?= $user['idUsuario'] ?>" >Editar</a></td> 
 
-                        <td class="px-6 py-4">
-                        <form action="/generatecorreo/delete-user" method="POST">  
+                        <td class="px-6 py-4"> 
+
+                        <form class="delete-form" action="/generatecorreo/delete-user" method="POST">
                             <input type="hidden" name="idUsuario" value="<?= $user['idUsuario'] ?>">
-                            <button type="submit" class="text-red-600 hover:text-red-900">Eliminar</button>
-                        </form> 
+                            <button type="button" class="delete-button text-red-600 hover:text-red-900" data-id="<?= $user['idUsuario'] ?>">Eliminar</button>
+                        </form>
  
                         </td> 
                     </tr>

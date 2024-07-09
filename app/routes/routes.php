@@ -1,7 +1,9 @@
 <?php
 use App\Controllers\UserController;
-use App\Controllers\LoginController;
-use App\Controllers\LogoutController;
+use App\Controllers\SesionController; 
+
+require_once __DIR__ . '/../config/app.php';
+
 
 function getView() {
     $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -16,14 +18,26 @@ function getView() {
 
     $getRoutes = [
         '' => function() { require __DIR__ . '/../views/layouts/login.php'; },
-        'login' => function() { require __DIR__ . '/../views/layouts/login.php'; },  
         'dashboard' => function() { require __DIR__ . '/../views/layouts/dashboard.php'; },
         'register' => function() { require __DIR__ . '/../views/layouts/register.php'; },
+        'buscarP' => function() { require __DIR__ . '/../views/layouts/buscar.php'; },
+        'login' => function() { require __DIR__ . '/../views/layouts/login.php'; },  
+        'check-cedula' => function() {
+            $controller = new UserController();
+            $controller->checkCedula();
+        },
+        'check-email' => function(){
+            $controller = new UserController();
+            $controller->checkEmail();
+        },
         'mostrarP' => function() {
             $controller = new UserController();
             $controller->showUsers();
         },
-        'buscarP' => function() { require __DIR__ . '/../views/layouts/buscar.php'; },
+        'ultimos-accesos' => function() {
+        $controller = new SesionController();
+        $controller->obtenerUltimosAccesos();
+        },
         'edit-user' => function() {
             $controller = new UserController();
             $controller->editView($_GET['idUsuario']);
@@ -34,7 +48,7 @@ function getView() {
        },
         
         'logout' => function() {
-            $controller = new LogoutController();
+            $controller = new SesionController();
             $controller->logout();
         }, 
     ];
@@ -45,13 +59,8 @@ function getView() {
             $controller->register();
         },
         'iniciar-sesion'=>function(){
-            $controller = new LoginController();
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $controller->login();
-            } else {
-                require __DIR__ . '/../views/layouts/login.php';
-            }
-            
+            $controller = new SesionController();
+            $controller->login();
         },
         'delete-user' => function() {
         $controller = new UserController();
@@ -62,6 +71,7 @@ function getView() {
             $controller = new UserController();
             $controller->editUser();
         },
+        
     ];
 
     if ($requestMethod == 'GET' && isset($getRoutes[$requestUri])) {
